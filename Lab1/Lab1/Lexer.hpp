@@ -26,6 +26,7 @@ private:
     Token comment();
     Token tokenNext(char, Token::Kind, Token::Kind);
     Token tokenNext(char, char, Token::Kind, Token::Kind, Token::Kind);
+    Token preprocessor();
     
 public:
     Lexer(std::string);

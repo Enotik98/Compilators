@@ -65,6 +65,8 @@ public:
         BITWISE_OR_ASSIGN, //^=
         SINGLE_QUOTE,   // '
         DOUBLE_QUOTE,   // "
+        PREPROCESSOR,
+        SYMBOL,
         END,
         UNEXPECTED
     };
@@ -138,6 +140,8 @@ private:
         {Kind::BITWISE_OR_ASSIGN, "BITWISE_OR_ASSIGN"},
         {Kind::SINGLE_QUOTE, "SINGLE_QUOTE"},
         {Kind::DOUBLE_QUOTE, "DOUBLE_QUOTE"},
+        {Kind::PREPROCESSOR, "PREPROCESSOR"},
+        {Kind::SYMBOL, "SYMBOL"},
         {Kind::END, "END"},
     };
     std::vector<std::string> keyWords = {
@@ -211,7 +215,6 @@ private:
         "@defs",
         "NSArray",
         "NSLog",
-        "NSNumber",
         
         
     };

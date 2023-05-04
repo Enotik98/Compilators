@@ -121,8 +121,7 @@ Token Lexer::comment(){
     }else{
         return Token(Token::Kind::SLASH);
     }
-    
-    
+
 }
 Token Lexer::tokenNext(char c, Token::Kind tk1, Token::Kind tk2){
     std::string lex{get()};
@@ -147,6 +146,34 @@ Token Lexer::tokenNext(char c1, char c2, Token::Kind tk1, Token::Kind tk2, Token
         return Token(tk3, lex);
     }
 }
+Token Lexer::preprocessor(){
+    std::string lex{get()};
+    std::vector<std::string> preprocessors = {
+        "include", "import", "define", "ifdef", "ifndef", "endif",
+        "if", "elif", "pragrma"
+    };
+    std::string str ;
+    while (is_space(peek())) {
+        lex += get();
+    }
+    while (peek() != '<' && peek() != '"' && !is_space(peek())) {
+            str += peek();
+            lex += get();
+    }
+    auto itr = std::find(preprocessors.begin(), preprocessors.end(), str);
+    if (itr != preprocessors.end()) {
+        while (is_space(peek()) || peek() == '"') {
+            lex += get();
+        }
+        while (peek() != '>' && peek() != '"' && peek() != '\n'){
+            lex += get();
+        }
+        lex += get();
+        return Token(Token::Kind::PREPROCESSOR, lex);
+    }else{
+        return Token(Token::Kind::UNEXPECTED, lex);
+    }
+}
 
 
 
@@ -165,6 +192,8 @@ Token Lexer::next(){
     switch (c) {
         case '"':
             return string();
+        case '#':
+            return preprocessor();
         case '\'':
             return Token(Token::Kind::SINGLE_QUOTE, std::string{get()});
         case ';':
