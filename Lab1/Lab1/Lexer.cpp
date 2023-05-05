@@ -2,6 +2,8 @@
 //  Lexer.cpp
 //  Lab1
 //
+// Lexer for Objective-C
+//
 //  Created by Enotik on 27.04.2023.
 //
 
@@ -38,8 +40,8 @@ Token Lexer::string(){
         if (current_char == '"' && prev_char != '\\') {
             count_quote --;
         }
-        if (current_char == '\xff') {
-            return Token(Token::Kind::UNEXPECTED, lex);
+        if (current_char == '\xff' || current_char == '\n') {
+            return Token(Token::Kind::UNEXPECTED_STRING, lex);
         }
         lex += get();
         prev_char = current_char;
@@ -53,7 +55,23 @@ Token Lexer::number(){
     Token::Kind token = Token::Kind::INTEGER;
     int pos = 0;
     while (is_number(peek()) || peek() == '.') {
+        char curr_char = peek();
         lex += get();
+        //check hexadecimal 0x..
+        if (curr_char =='0' && pos == 0){
+            pos ++;
+            if (peek() == 'x') {
+                lex += get();
+                while (isnumber(peek()) || is_letter(peek())) {
+                    
+                    lex += get();
+                }
+                return Token(Token::Kind::HEXADECIMAL, lex);
+            }else if (!is_number(peek()) && peek() != '.'){
+                break;
+            }
+        }
+        //check .. and .3
         if ((peek() == '.' && prev_char == '.') || (pos == 0 && prev_char == '.')) {
             return Token(Token::Kind::UNEXPECTED, lex);
         }
@@ -61,6 +79,12 @@ Token Lexer::number(){
             token = Token::Kind::FLOAT;
         }
         prev_char = peek();
+        pos++;
+    }
+    //check 0.1f
+    if (peek() == 'f' || peek() == 'F') {
+        lex += get();
+        return Token(Token::Kind::FLOAT, lex);
     }
     return Token(token, lex);
 }
@@ -69,27 +93,32 @@ Token Lexer::idetifier(){
     std::string lex;
     
     if (peek() == '@'){
-        lex += get();
+        lex += get(); // get @
         int count = 1;
-        char str = peek();
+        char start = peek();
         for (char c; count > 0; c = peek()){
             if (c == '\xff') {
                 return Token(Token::Kind::UNEXPECTED, lex);
             }
-            if (!isnumber(str) && !is_letter(str)) {
-                if ((str == '(' && c == ')') || (str == '"' && c == '"') || (str == '\'' && c == '\'') || (str == '{' && c == '}') || (str == '[' && c == ']')){
+            if (!isnumber(start) && !is_letter(start)) {
+                if ((start == '(' && c == ')') || (start == '"' && c == '"') || (start == '\'' && c == '\'') || (start == '{' && c == '}') || (start == '[' && c == ']')){
                     count--;
                 }
             }else{
                 c = peek();
-                // пока с число чи строка
+                // when c is_number or is_letter
                 if (!isnumber(c) && !is_letter(c) && c != '.') {
                     count--;
+                    break;
                 }
             }
             lex += get();
         }
+        if (start == '"') {
+            return Token(Token::Kind::LITERAL, lex);
+        }
     }else{
+        //reading identifier
         for (char c = peek(); is_number(c) || is_letter(c) || c == '_'; c = peek()) {
             lex += get();
         }
@@ -106,7 +135,7 @@ Token Lexer::comment(){
         for (char curr_char = get(); count_comment > 0; curr_char = get()) {
             if (prev_char == '*' && curr_char == '/') count_comment--;
             if (curr_char == '\xff') {
-                return Token(Token::Kind::UNEXPECTED, lex);
+                return Token(Token::Kind::UNEXPECTED_COMMET, lex);
             }
 
             lex += curr_char;
@@ -147,34 +176,108 @@ Token Lexer::tokenNext(char c1, char c2, Token::Kind tk1, Token::Kind tk2, Token
     }
 }
 Token Lexer::preprocessor(){
-    std::string lex{get()};
+    std::string lex{get()}; //get #
     std::vector<std::string> preprocessors = {
         "include", "import", "define", "ifdef", "ifndef", "endif",
-        "if", "elif", "pragrma"
+        "if", "elif", "pragma"
     };
     std::string str ;
-    while (is_space(peek())) {
+    //space after #
+    while (is_space(peek()) && peek() != '\n' && peek() != '/') {
         lex += get();
     }
-    while (peek() != '<' && peek() != '"' && !is_space(peek())) {
+    //reading the word
+    while (peek() != '<' && peek() != '"' && !is_space(peek()) && peek() != '/') {
             str += peek();
             lex += get();
     }
+    //check for preprocessors
     auto itr = std::find(preprocessors.begin(), preprocessors.end(), str);
     if (itr != preprocessors.end()) {
-        while (is_space(peek()) || peek() == '"') {
+        bool symb = false; // start with " or <
+        //clear space after preprocessor
+        while ((is_space(peek()) || peek() == '"') && peek() != '\n' && peek() != '/') {
+            if (peek() == '"') {
+                symb = true;
+            }
             lex += get();
         }
-        while (peek() != '>' && peek() != '"' && peek() != '\n'){
+        if (peek() == '<') {
+            symb = true;
+        }
+        //reading to the end of the line or to the comment
+        while (peek() != '>' && peek() != '"' && peek() != '\n' && !(peek() == '/' && !symb)){
             lex += get();
+        }
+        if (peek() == '/') {
+            return Token(Token::Kind::PREPROCESSOR, lex);
         }
         lex += get();
         return Token(Token::Kind::PREPROCESSOR, lex);
-    }else{
+    }else {
         return Token(Token::Kind::UNEXPECTED, lex);
     }
 }
+Token Lexer::character(){
+    std::string lex{ get() };
+       if(peek() == '\\') {
+           lex += get();
+           switch (peek()) {
+               case 'n':
+               case 't':
+                   lex += get();
+                   break;
 
+               case 'x':
+               case 'e': {
+                   int h = peek() == 'x' ? 2 : 3;
+
+                   lex += get();
+                   for(int i = 0; i < h; i++) {
+                       if(isxdigit(peek())) {
+                           lex += get();
+                       }
+                       else {
+                           return Token(Token::Kind::UNEXPECTED, lex);
+                       }
+                   }
+                   break;
+               }
+               case '0':
+               case '1':
+               case '2':
+               case '3':
+               case '4':
+               case '5':
+               case '6':
+               case '7': {
+                   for(int i = 0; i < 3; i++) {
+                       if(peek() >= '0' && peek() <= '7') {
+                           lex += get();
+                       }
+                       else {
+                           return Token(Token::Kind::UNEXPECTED_SYMBOL, lex);
+                       }
+                   }
+
+                   break;
+               }
+               default:
+                   lex += get();
+                   break;
+           }
+       }
+       else {
+           lex += get();
+       }
+
+       if(peek() != '\'') {
+           return Token(Token::Kind::UNEXPECTED_SYMBOL, lex);
+       }
+       lex += get();
+       return Token(Token::Kind::CHARACTER, lex);
+
+}
 
 
 Token Lexer::next(){
@@ -195,7 +298,7 @@ Token Lexer::next(){
         case '#':
             return preprocessor();
         case '\'':
-            return Token(Token::Kind::SINGLE_QUOTE, std::string{get()});
+            return character();
         case ';':
             return Token(Token::Kind::SEMICOLON, std::string{get()});
         case ':':

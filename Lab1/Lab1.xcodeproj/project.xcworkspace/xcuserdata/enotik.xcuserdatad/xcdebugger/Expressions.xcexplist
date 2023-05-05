@@ -3,10 +3,10 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "Lexer::preprocessor():Lexer.cpp">
+         contextName = "Lexer::number():Lexer.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "is_space(c)">
+               value = "(peek() == &apos;.&apos; &amp;&amp; prev_char == &apos;.&apos;)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -15,6 +15,14 @@
          <PersistentStrings>
             <PersistentString
                value = "keyWords[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Lexer::preprocessor():Lexer.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(peek() != &apos;&gt;&apos; &amp;&amp; peek() != &apos;&quot;&apos; &amp;&amp; peek() != &apos;\n&apos; &amp;&amp; !(peek() == &apos;/&apos; &amp;&amp; symb))">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

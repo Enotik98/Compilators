@@ -2,6 +2,8 @@
 //  Lexer.hpp
 //  Lab1
 //
+// Lexer for Objective-C
+//
 //  Created by Enotik on 27.04.2023.
 //
 
@@ -27,6 +29,7 @@ private:
     Token tokenNext(char, Token::Kind, Token::Kind);
     Token tokenNext(char, char, Token::Kind, Token::Kind, Token::Kind);
     Token preprocessor();
+    Token character();
     
 public:
     Lexer(std::string);

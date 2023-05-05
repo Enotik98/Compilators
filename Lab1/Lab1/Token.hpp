@@ -1,6 +1,7 @@
-//
-//  Token.h
+//  Token.H
 //  Lab1
+//
+// Lexer for Objective-C
 //
 //  Created by Enotik on 27.04.2023.
 //
@@ -18,12 +19,13 @@ public:
         NUMBER,
         INTEGER,
         FLOAT,
+        HEXADECIMAL,
         STRING,
+        IDENTIFIER,
         SEMICOLON,      // ;
         DOT,            // .
         COMMA,          // ,
         COLON,          // :
-        IDENTIFIER,
         COMMENT,        // /* */
         SLASH,          // /
         ASSIGN,         // =
@@ -66,8 +68,12 @@ public:
         SINGLE_QUOTE,   // '
         DOUBLE_QUOTE,   // "
         PREPROCESSOR,
-        SYMBOL,
+        CHARACTER,
+        LITERAL,
         END,
+        UNEXPECTED_STRING,
+        UNEXPECTED_COMMET,
+        UNEXPECTED_SYMBOL,
         UNEXPECTED
     };
     Token(Kind kind, std::string const &lex) : _kind{kind}, _lexeme(lex) {}
@@ -92,6 +98,7 @@ private:
     std::map<Kind, std::string> tokenMap{
         {Kind::FLOAT, "FLOAT"},
         {Kind::INTEGER, "INTEGER"},
+        {Kind::HEXADECIMAL, "HEXADECIMAL"},
         {Kind::STRING, "STRING"},
         {Kind::UNEXPECTED, "UNEXPECTED"},
         {Kind::SEMICOLON, "SEMICOLON"},
@@ -141,7 +148,11 @@ private:
         {Kind::SINGLE_QUOTE, "SINGLE_QUOTE"},
         {Kind::DOUBLE_QUOTE, "DOUBLE_QUOTE"},
         {Kind::PREPROCESSOR, "PREPROCESSOR"},
-        {Kind::SYMBOL, "SYMBOL"},
+        {Kind::CHARACTER, "CHARACTER"},
+        {Kind::LITERAL, "LITERALS"},
+        {Kind::UNEXPECTED_STRING, "UNEXPECTED_STRING"},
+        {Kind::UNEXPECTED_COMMET, "UNEXPECTED_COMMET"},
+        {Kind::UNEXPECTED_COMMET, "UNEXPECTED_SYMBOL"},
         {Kind::END, "END"},
     };
     std::vector<std::string> keyWords = {
@@ -167,8 +178,8 @@ private:
         "int",
         "@protocol",
         "NSInteger",
-        "nonatomic", // ;?
-        "unsafe_unretained", // ;?
+        "nonatomic",
+        "unsafe_unretained",
         "long",
         "register",
         "return",
@@ -215,8 +226,6 @@ private:
         "@defs",
         "NSArray",
         "NSLog",
-        
-        
     };
 };
 
